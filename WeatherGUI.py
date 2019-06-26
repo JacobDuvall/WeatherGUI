@@ -1,6 +1,16 @@
 import tkinter as tk  # GUI for project
 import requests  # used to make web requests
 from PIL import Image, ImageTk  # used for icons
+import swagger_client
+
+
+def get_strava_data():
+    strava_key = 'access_token=7830740b3e2413fa790b4c3663b206758baae547'
+    url = 'https://www.strava.com/api/v3/activities'
+   # params = {'id': 24713455}
+    params = {'Authorization'}
+    response = requests.get(url + '?' + strava_key + '&per_page=50' + '&page=' + '1')
+    print(response)
 
 # format the string to display after searching for a city
 # @weather_json - the json file returned from weather API
@@ -22,7 +32,6 @@ def get_weather(city):
     url = 'http://api.openweathermap.org/data/2.5/weather'
     params = {'APPID': 'edffd1bf975a74d5d10e58c5ac8be2d3', 'q': city, 'units': 'imperial'}  # dictionary used to query
     response = requests.get(url, params=params)  # ask API for the goods
-    print(response.json())
     weather_json = response.json()
 
     results['text'] = format_response(response.json())
@@ -73,5 +82,7 @@ results.place(relwidth=1, relheight=1)
 
 weather_icon = tk.Canvas(results, bg=bg_color, bd=0, highlightthickness=0)
 weather_icon.place(relx=.75, rely=0, relwidth=1, relheight=0.5)
+
+get_strava_data()
 
 app.mainloop()  # loop and run GUI forever
