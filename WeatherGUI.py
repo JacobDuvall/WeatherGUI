@@ -1,25 +1,39 @@
 import tkinter as tk  # GUI for project
 import requests  # used to make web requests
 from PIL import Image, ImageTk  # used for icons
-import swagger_client
+import time
 
+is_set = False
 
-def get_strava_data():
-    strava_key = 'access_token=7830740b3e2413fa790b4c3663b206758baae547'
-    url = 'https://www.strava.com/api/v3/activities'
-   # params = {'id': 24713455}
-    params = {'Authorization'}
-    response = requests.get(url + '?' + strava_key + '&per_page=50' + '&page=' + '1')
-    print(response)
+def set_background(temp):
+    if temp <= 65:
+        bg_color = '#daff85'
+        results.config(font=40, bg=bg_color)
+    elif temp >= 80:
+        bg_color = 'Red'
+        results.config(font=40, bg=bg_color)
+    else:
+        bg_color = '#f9ff52'
+        results.config(font=40, bg=bg_color)
 
 # format the string to display after searching for a city
 # @weather_json - the json file returned from weather API
 def format_response(weather_json):
     try:
+        print(weather_json)
         city = weather_json['name']
         conditions = weather_json['weather'][0]['description']
         temp = weather_json['main']['temp']
-        final_str = 'City: %s \nConditions: %s \nTemperature (°F): %s' % (city, conditions, temp)
+        humidity = weather_json['main']['humidity']
+        wind = weather_json['wind']['speed']
+        set_background(temp)
+        final_str = "City: %s \nConditions: %s\nTemperature: %s °F" \
+                    "\nHumidity: %s%%" \
+                    "\nWind Speed: %s mph" \
+                    "\n\n\n\n\nStrava Athlete: " \
+                    "\nDate of Last Run: " \
+                    "\nDistance of Last Run: " \
+                    "\nDistance Run in Last 7 Days: " % (city, conditions.title(), temp, humidity, wind)
     except:
         final_str = 'There was a problem retrieving that information'
     return final_str
@@ -34,10 +48,15 @@ def get_weather(city):
     response = requests.get(url, params=params)  # ask API for the goods
     weather_json = response.json()
 
-    results['text'] = format_response(response.json())
+    results['text'] = format_response(weather_json)
+    try:
+        icon_name = weather_json['weather'][0]['icon']  # The correct icon to display
+        open_image(icon_name)
+    except:
+        print("invalid city, no icon")
 
-    icon_name = weather_json['weather'][0]['icon']  # The correct icon to display
-    open_image(icon_name)
+    global is_set
+    is_set = True
 
 
 # display the icon for the current weather in the current city
@@ -63,8 +82,14 @@ background_label.place(x=0, y=0, relwidth=1, relheight=1)
 
 C.pack()
 
-frame = tk.Frame(app,  bg='#42c2f4', bd=5)
+frame = tk.Frame(app,  bg='pink', bd=5)
 frame.place(relx=0.5, rely=0.1, relwidth=0.75, relheight=0.1, anchor='n')
+
+# displays time at the top of the window in an entry box
+time = time.strftime('%A %B, %d  %H:%M%p')
+Time = tk.Entry(app, bd = 5, width = 25, selectbackground = 'black')
+Time.place(relx= 0.4)
+Time.insert(0, time)
 
 textbox = tk.Entry(frame, font=40)
 textbox.place(relwidth=0.65, relheight=1)
@@ -72,7 +97,7 @@ textbox.place(relwidth=0.65, relheight=1)
 submit = tk.Button(frame, text='Get Weather', font=40, command=lambda: get_weather(textbox.get()))
 submit.place(relx=0.7, relheight=1, relwidth=0.3)
 
-lower_frame = tk.Frame(app, bg='#42c2f4', bd=10)
+lower_frame = tk.Frame(app, bg='pink', bd=10)
 lower_frame.place(relx=0.5, rely=0.25, relwidth=0.75, relheight=0.6, anchor='n')
 
 bg_color = 'white'
@@ -83,6 +108,26 @@ results.place(relwidth=1, relheight=1)
 weather_icon = tk.Canvas(results, bg=bg_color, bd=0, highlightthickness=0)
 weather_icon.place(relx=.75, rely=0, relwidth=1, relheight=0.5)
 
-get_strava_data()
+
+# updates the weather, time, and  every 60 seconds
+def update():
+    import time
+    try:
+        Time.delete(0, 30)
+        time = time.strftime('%A %B, %d  %H:%M%p')
+        Time.insert(0, time)
+        get_weather(textbox.get())
+        print("refreshing weather")
+        app.after(60000, update)
+    except:
+        print("Please enter a valid city")
+        app.after(2000, update)
+
+
+
+# after 60 seconds, check for an updated weather
+app.after(6000, update)
+
+
 
 app.mainloop()  # loop and run GUI forever
