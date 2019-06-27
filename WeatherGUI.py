@@ -3,8 +3,6 @@ import requests  # used to make web requests
 from PIL import Image, ImageTk  # used for icons
 import time
 
-is_set = False
-
 def set_background(temp):
     if temp <= 65:
         bg_color = '#daff85'
@@ -54,9 +52,6 @@ def get_weather(city):
         open_image(icon_name)
     except:
         print("invalid city, no icon")
-
-    global is_set
-    is_set = True
 
 
 # display the icon for the current weather in the current city
